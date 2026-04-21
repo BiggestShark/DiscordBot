@@ -1,1 +1,6 @@
+#環境變數和密鑰
 .env
+
+#python檔案
+__pycache__/
+*.pyc
