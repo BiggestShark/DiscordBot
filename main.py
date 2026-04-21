@@ -24,6 +24,9 @@ class MyBot( commands.Bot ):
                 #載入模組( 刪除.py副檔名 )
                 await self.load_extension( f'cogs.{ filename[ : -3 ] }' )
                 print( f'已載入模組: { filename }' )
+                
+        #同步斜線指令
+        await self.tree.sync()
     
     async def on_ready( self ):
         print( f'已成功登入為{ self.user }' )
