@@ -119,5 +119,5 @@ class YTDLBOT( commands.Cog ):
                 except OSError:
                     pass
                 
-    async def setup( bot ):
-        await bot.add_cog( YTDLBOT( bot ) )
+async def setup( bot ):
+    await bot.add_cog( YTDLBOT( bot ) )

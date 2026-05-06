@@ -1,8 +1,7 @@
 import discord
 from discord.ext import commands
+from discord import app_commands
 import datetime
-import csv
-import io
 
 class VoiceLogs( commands.Cog ):
     def __init__( self , bot ):
@@ -18,32 +17,33 @@ class VoiceLogs( commands.Cog ):
         
     @commands.Cog.listener()
     async def on_voice_state_update( self , member , before , after ):
+        #若頻道沒有變化，則忽略
         if before.channel == after.channel:
             return
-        
-        log_channel = self.bot.get_channel( self.log_channel_id )
-        if not log_channel:
-            return
-        
+
         time_str = datetime.datetime.now().strftime( '%Y/%m/%d %H:%M:%S' )
         
         #記錄進入頻道
-        if after.channel and after.channel_id == self.target_voice_id:
-            await log_channel.send( f"`[{ time_str }]` 👤 **{ member.display_name }** 進入了 `{ after.channel.name }`" )
+        if after.channel:
+            self._add_log( after.channel.id , time_str , member.display_name , 'Join' )
             
         #記錄離開頻道
-        if before.channel and before.channel_id == self.target_voice_id:
-            await log_channel.send( f"`[{ time_str }]` 👤 **{ member.display_name }** 離開了 `{ after.channel.name }`" )
+        if before.channel:
+            self._add_log( before.channel.id , time_str , member.display_name , 'Leave' )
             
-    @commands.command()
-    async def showlog( self , ctx , * , channel: discord.VoiceChannel ):
+    #使用app_command支援斜線指令
+    @app_commands.command( name = "showlog" , description = "顯示特定語音頻道的進出記錄" )
+    async def showlog( self , interaction : discord.Interaction , channel : discord.VoiceChannel ):
         records = self.logs.get( channel.id , [] )
         
         message_content = f"**頻道ID `{ channel.name }` 的進出記錄：**\n"
         
         if not records:
-            await ctx.send( f"`{ channel.name }`無記錄" )
+            await interaction.response.send_message( f"`{ channel.name }`無記錄" )
             return
+        
+        #延遲回應避免斜線指令超時
+        await interaction.response.defer()
         
         for timestamp , user , action in records:
             action_tw = "進入" if action == 'Join' else "離開"
@@ -51,7 +51,7 @@ class VoiceLogs( commands.Cog ):
             
             #檢查是否即將超過DC 2000字元限制 (保留緩衝)
             if len( message_content ) + len( line ) > 1900:
-                await ctx.send( message_content )
+                await interaction.response.send_message( message_content )
                 
                 #先清空
                 message_content = ""
@@ -59,7 +59,7 @@ class VoiceLogs( commands.Cog ):
             message_content += line
             
         if message_content:
-            await ctx.send( message_content )
-        
+            await interaction.followup.send( message_content )
+            
 async def setup( bot ):
     await bot.add_cog( VoiceLogs( bot ) )
