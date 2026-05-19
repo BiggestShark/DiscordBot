@@ -1,6 +1,7 @@
 #環境變數和密鑰
 .env
 oracleCloudKeys/
+www.youtube.com_cookies.txt
 
 #python檔案
 __pycache__/
