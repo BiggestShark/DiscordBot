@@ -49,7 +49,7 @@ class YTDLBOT( commands.Cog ):
         await interation.response.defer()
         
         #設定輸出檔名為interation ID
-        output_template = f"{ interation.id }.%( ext )s"
+        output_template = f"{ interation.id }.%(ext)s"
         cmd = ['yt-dlp' , url , '-o' , output_template]
         
         #音質預設值
@@ -63,8 +63,8 @@ class YTDLBOT( commands.Cog ):
                 '--extract-audio',
                 '--audio-format',
                 'mp3',
-                'audio_quality',
-                'quality_val'
+                '--audio-quality',
+                quality_val
             ])
         else:
             cmd.extend([
@@ -81,7 +81,9 @@ class YTDLBOT( commands.Cog ):
         
         #時間段
         if start_time or end_time:
-            cmd.extend( ['--download-sections' , f'*{ start_time } - { end_time }'] )
+            s_time = start_time if start_time else "0"
+            e_time = end_time if end_time else "inf"
+            cmd.extend( ['--download-sections' , f'*{ s_time } - { e_time }'] )
             
         try:
             #執行yt-dlp指令
@@ -90,20 +92,24 @@ class YTDLBOT( commands.Cog ):
                 stdout = asyncio.subprocess.PIPE,
                 stderr = asyncio.subprocess.PIPE
             )
-            await process.communicate()
+            _ , stderr = await process.communicate()
+            
+            #若yt-dlp執行失敗，輸出詳細錯誤
+            if process.returncode != 0:
+                await interation.followup.send( f"下載失敗。yt-dlp報錯資訊：\n```\n{ stderr.decode( 'utf-8' , errors = 'ignore' )[-1800:] }\n```" )
             
             #尋找下載完成的檔案
             files = glob.glob( f"{ interation.id }.*" )
             if not files:
-                await interation.followup.send( f"下載失敗")
+                await interation.followup.send( f"下載失敗，找不到輸出的檔案")
                 return
             
             file_path = files[0]
             file_size = os.path.getsize( file_path )
             
-            #discord預設檔案最大5mb
-            if file_size > 5 *1024 * 1024:
-                await interation.followup.send( f"下載完成，但是檔案大小( { file_size /1024 / 1024 :.2f } mb )，超過5mb限制")
+            #discord預設檔案最大25mb
+            if file_size > 25 *1024 * 1024:
+                await interation.followup.send( f"下載完成，但是檔案大小( { file_size /1024 / 1024 :.2f} mb )，超過5mb限制")
                 
             else:
                 #傳送檔案
