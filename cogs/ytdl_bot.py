@@ -50,7 +50,7 @@ class YTDLBOT( commands.Cog ):
         
         #設定輸出檔名為interation ID
         output_template = f"{ interation.id }.%(ext)s"
-        cmd = ['yt-dlp' , url , '-o' , output_template , '--extractor-args' , 'youtube:player_client=android']
+        cmd = ['yt-dlp' , url , '-o' , output_template , '--oauth2']
         
         #音質預設值
         quality_val = audio_quality.value if audio_quality else "192k"
