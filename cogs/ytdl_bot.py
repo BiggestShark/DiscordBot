@@ -50,7 +50,17 @@ class YTDLBOT( commands.Cog ):
         
         #設定輸出檔名為interation ID
         output_template = f"{ interation.id }.%(ext)s"
-        cmd = ['yt-dlp' , url , '-o' , output_template , '--username' , '--oauth2' , '--password' , '']
+        cmd = ['yt-dlp',
+               url,
+               '-o',
+               output_template,
+               '--cookies',
+               'cookies.txt',
+               '--no-playlist',
+               '--js-runtimes',
+               'deno',
+               '--no-playlist'
+            ]
         
         #音質預設值
         quality_val = audio_quality.value if audio_quality else "192k"
@@ -59,7 +69,7 @@ class YTDLBOT( commands.Cog ):
         if media_type.value == 'audio':
             cmd.extend([
                 '-f',
-                'bestaudio',
+                'bestaudio/best',
                 '--extract-audio',
                 '--audio-format',
                 'mp3',
