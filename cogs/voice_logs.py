@@ -2,6 +2,8 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 import datetime
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 class VoiceLogs( commands.Cog ):
     def __init__( self , bot ):
@@ -15,13 +17,16 @@ class VoiceLogs( commands.Cog ):
             self.logs[channel_id] = []
         self.logs[channel_id].append( ( timestamp , user , action ) )
         
+        #只保留最後30筆
+        self.logs[channel_id] = self.logs[channel_id][-20:]
+        
     @commands.Cog.listener()
     async def on_voice_state_update( self , member , before , after ):
         #若頻道沒有變化，則忽略
         if before.channel == after.channel:
             return
 
-        time_str = datetime.datetime.now().strftime( '%Y/%m/%d %H:%M:%S' )
+        time_str = datetime.now( ZoneInfo( "Asia/Taipei" ) ).strftime( '%Y/%m/%d %H:%M:%S' )
         
         #記錄進入頻道
         if after.channel:
